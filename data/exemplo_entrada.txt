@@ -1,0 +1,40 @@
+# Quantidade de Vértices(N) e Arrestas(M):
+
+Vértices | Arrestas
+11 16
+
+# Especificações dos Vértices(Inserir em ordem de ID do Vértice de 0 até N-1):
+
+ID | NOME | TIPO | CMP? | GINÁSIO? | LABORATÓRIO?
+0 "Cidade O" CIDADE 0 0 1
+1 "Rota 1" ROTA 0 0 0
+2 "Cidade F" CIDADE 1 1 0
+3 "Cidade Z" CIDADE 1 1 0
+4 "Cidade B" CIDADE 0 1 0
+5 "Cidade C" CIDADE 1 1 0
+6 "Cidade G" CIDADE 0 1 0
+7 "Cidade E" CIDADE 1 1 0
+8 "Cidade A" CIDADE 0 1 0
+9 "Cidade H" CIDADE 0 1 0
+10 "Liga Pokemon" LIGA 0 0 0
+
+# Arrestas:
+
+Origem | Destino | Peso
+
+0 1 5
+1 2 4
+2 3 6
+3 4 7
+4 5 5
+5 6 8
+6 7 6
+7 8 9
+8 9 7
+9 10 10
+2 4 12
+3 5 11
+0 2 9
+5 7 10
+6 8 9
+7 9 8
