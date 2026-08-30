@@ -1,0 +1,10 @@
+MAPA "entrada.txt"
+PRAZO 1260
+SELVAGENS 12
+TREINADORES 4
+ERVAS 6
+OVOS 2
+ESPECIES 3
+3 "Bulbasaur" 1 GRAMA "Ivysaur" 1 GRAMA "Venusaur" 2 GRAMA VENENOSO
+3 "Charmander" 1 FOGO "Charmeleon" 1 FOGO "Charizard" 2 FOGO VOADOR
+3 "Squirtle" 1 AGUA "Wartortle" 1 AGUA "Blastoise" 1 AGUA

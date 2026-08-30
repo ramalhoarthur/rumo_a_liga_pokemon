@@ -1,12 +1,12 @@
 11 16
 0 "Cidade O" CIDADE 0 0 1
-1 "Rota 1" ROTA 0 0 0
-2 "Cidade F" CIDADE 1 1 0
-3 "Cidade Z" CIDADE 1 1 0
+1 "Rota 1" ROTA 1 0 0
+2 "Cidade F" CIDADE 0 1 0
+3 "Cidade Z" CIDADE 0 1 0
 4 "Cidade B" CIDADE 0 1 0
-5 "Cidade C" CIDADE 1 1 0
+5 "Cidade C" CIDADE 0 1 0
 6 "Cidade G" CIDADE 0 1 0
-7 "Cidade E" CIDADE 1 1 0
+7 "Cidade E" CIDADE 0 1 0
 8 "Cidade A" CIDADE 0 1 0
 9 "Cidade H" CIDADE 0 1 0
 10 "Liga Pokemon" LIGA 0 0 0

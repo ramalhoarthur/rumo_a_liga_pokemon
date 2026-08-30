@@ -25,6 +25,45 @@ A região é modelada como um grafo ponderado lido a partir de um arquivo texto.
   * **Centro Médico Pokémon (PMC):** Local obrigatório para recuperação de pokémons gravemente feridos. Não permite batalhas.
   * **Estádio da Liga Pokémon:** Destino final para inscrição no torneio, antes do esgotamento do tempo limite.
 
+### Formato do mapa
+
+O arquivo `data/entrada.txt` é lido pela classe `Grafo` e segue este formato:
+
+```text
+N M
+id "nome" tipo possui_cmp possui_ginasio possui_laboratorio
+... (N linhas de vértices, em ordem de ID, de 0 a N-1)
+origem destino peso
+... (M linhas de arestas)
+```
+
+Os indicadores de locais especiais usam `0` (não) ou `1` (sim). O mapa é não direcionado: uma linha `u v peso` permite viajar de `u` para `v` e de `v` para `u`. Os pesos precisam ser positivos e representam o tempo de deslocamento.
+
+Exemplo de uso no código:
+
+```cpp
+#include "headings/grafo.hpp"
+
+Grafo mapa("data/entrada.txt");
+const auto& cidade_inicial = mapa.vertice(0);
+const auto& caminhos = mapa.vizinhos(0);
+```
+
+O cenário completo fica em `data/cenario.txt`. Ele informa o mapa, prazo da Liga, quantidades de entidades e as formas evolutivas das espécies:
+
+```text
+MAPA "entrada.txt"
+PRAZO 1260
+SELVAGENS 12
+TREINADORES 4
+ERVAS 6
+OVOS 2
+ESPECIES 3
+3 "Bulbasaur" 1 GRAMA "Ivysaur" 1 GRAMA "Venusaur" 2 GRAMA VENENOSO
+```
+
+Em cada espécie, o primeiro número é a quantidade de formas (de 1 a 3). Para cada forma, são lidos nome entre aspas, número de tipos e os tipos. Ao carregar o cenário, as posições e atributos de selvagens, treinadores e ervas são sorteados com valores válidos.
+
 ## ⚔️ Mecânicas e Regras
 * **Equipe Pokémon:** Máximo de 6 ativos (e/ou ovos, limite de 7 total). Pokémons excedentes capturados vão para o Professor Carvalho.
 * **Batalhas em Turnos:** Baseadas em HP (Saúde), AP (Ataque) e DP (Defesa). Envolvem cálculos de dano e chances de esquiva proporcionais à diferença de XP (Experiência). O treinador desafiado ataca primeiro.
@@ -39,16 +78,30 @@ A região é modelada como um grafo ponderado lido a partir de um arquivo texto.
   * **Gravemente Ferido:** HP $<$ 5 (Exige repouso obrigatório no PMC para restaurar HP a 100).
 
 ## ⭐ Requisitos Extras (Bônus)
-*(Marque com um 'x' os bônus que a equipe conseguiu implementar)*
-- [ ] **Vantagens de Tipo:** Lógica de vantagens e desvantagens entre os tipos de pokémon nas batalhas.
-- [ ] **Equipe Rocket:** Equipe NPC que se movimenta roubando pokémons/insígnias após vencer batalhas, sumindo e reaparecendo no mapa aleatoriamente.
+
+- [x] **Vantagens de Tipo:** A matriz `17 × 17` em `headings/vantagens_tipo.hpp` mantém os tipos em ordem alfabética: Aço, Água, Dragão, Elétrico, Fada, Fantasma, Fogo, Gelo, Inseto, Lutador, Normal, Pedra, Planta, Psíquico, Sombrio, Terra, Venenoso e Voador. Linhas representam o atacante; colunas, o defensor. Vantagem vale `1.5`, desvantagem vale `0.5` e relações neutras valem `1.0`. Em Pokémon de dois tipos, é escolhido automaticamente o tipo atacante de maior efeito e os tipos defensivos multiplicam seus efeitos. Nos dois conflitos visuais da tabela (Dragão×Dragão e Fantasma×Fantasma), a vantagem prevalece, resultando em `1.5`.
+- [x] **Equipe Rocket:** Atua como um treinador NPC com equipe própria. Caso vença um duelo, rouba uma insígnia ou Pokémon e fica invisível por 20 a 100 unidades de tempo, voltando em ponto aleatório válido. Caso perca, é reposicionada em um ponto aleatório distante do confronto.
 
 ---
 
 ## 🚀 Como Executar
 
-<!-- ESPAÇO RESERVADO: Preencha no futuro com as instruções para rodar o código (ex: comandos de terminal, dependências, versão do compilador/interpretador) -->
-> *As instruções de execução e instalação de dependências serão adicionadas a esta seção no futuro.*
+É necessário um compilador compatível com C++17. A partir da raiz do repositório:
+
+```bash
+g++ -std=c++17 -Wall -Wextra -Wpedantic -Iheadings src/main.cpp -o rumo_liga
+./rumo_liga data/cenario.txt
+```
+
+Também é possível gerar o executável com CMake:
+
+```bash
+cmake -S . -B build
+cmake --build build
+./build/rumo_liga data/cenario.txt
+```
+
+No menu, o jogador pode mover-se por arestas adjacentes, consultar uma rota mínima, usar ervas, enfrentar selvagens e treinadores, desafiar líderes, confrontar a Equipe Rocket e tentar a inscrição na Liga. O atendimento no PMC recupera a equipe após um tempo aleatório; batalhas no laboratório e no PMC são bloqueadas.
 
 ---
 
