@@ -88,6 +88,26 @@ public:
     bool precisaPMC() const { return hp_ < 5; }
     int distanciaInconscienteRestante() const { return distancia_inconsciente_; }
 
+    // Define os atributos de um encontro selvagem, preservando a especie.
+    void definirAtributosDeEncontro(int ataque, int defesa, int hp, int xp) {
+        if (ataque <= 0 || defesa <= 0 || hp < 1 || hp > 100 || xp < 0) {
+            throw std::invalid_argument("Atributos de encontro invalidos");
+        }
+        xp_ = xp;
+        fase_ = 0;
+        bonus_ataque_batalha_ = 0;
+        bonus_defesa_batalha_ = 0;
+        ataque_base_ = 1;
+        defesa_base_ = 1;
+        evoluirSeNecessario();
+        ataque_base_ = std::max(1, ataque - xp_ / 10);
+        defesa_base_ = std::max(1, defesa - xp_ / 10);
+        hp_ = hp;
+        distancia_xp_ = 0;
+        distancia_recuperacao_ = 0;
+        distancia_inconsciente_ = 0;
+    }
+
     void ganharXp(int quantidade) {
         if (quantidade < 0) throw std::invalid_argument("XP nao pode ser negativo");
         xp_ += quantidade;
@@ -122,10 +142,11 @@ public:
         distancia_inconsciente_ = std::max(distancia_inconsciente_, indisponibilidade);
     }
 
-    void recuperarComErva() {
-        if (estadoSaude() == EstadoSaude::Consciente) {
-            hp_ = std::min(100, hp_ + 10);
-        }
+    bool recuperarComErva() {
+        if (estadoSaude() != EstadoSaude::Consciente) return false;
+        const int hp_antes = hp_;
+        hp_ = std::min(100, hp_ + 10);
+        return hp_ > hp_antes;
     }
 
     void tratarNoPMC() {

@@ -63,6 +63,10 @@ public:
     std::size_t quantidadeAtivos() const { return pokemon_ativos_.size(); }
     std::size_t quantidadeNoProfessor() const { return pokemon_no_professor_.size(); }
     bool possuiOvo() const { return ovo_.has_value(); }
+    std::optional<int> distanciaOvoRestante() const {
+        if (!ovo_) return std::nullopt;
+        return ovo_->distanciaRestante();
+    }
     std::size_t quantidadeInsignias() const { return insignias_.size(); }
     const std::vector<Pokemon>& pokemonAtivos() const { return pokemon_ativos_; }
     std::vector<Pokemon>& pokemonAtivos() { return pokemon_ativos_; }
@@ -93,10 +97,13 @@ public:
 
     void adicionarErva() { ++ervas_; }
 
-    bool usarErva() {
+    bool usarErva(int* pokemons_curados = nullptr) {
+        if (pokemons_curados) *pokemons_curados = 0;
         if (ervas_ == 0) return false;
         --ervas_;
-        for (Pokemon& pokemon : pokemon_ativos_) pokemon.recuperarComErva();
+        for (Pokemon& pokemon : pokemon_ativos_) {
+            if (pokemon.recuperarComErva() && pokemons_curados) ++*pokemons_curados;
+        }
         return true;
     }
 

@@ -13,6 +13,7 @@
 struct PokemonSelvagem {
     Pokemon pokemon;
     int posicao;
+    bool atributos_balanceados = false;
 };
 
 struct ErvaRegional {

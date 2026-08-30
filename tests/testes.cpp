@@ -39,6 +39,8 @@ void testarVantagensDeTipo() {
            "Tipos sem relacao devem ter multiplicador neutro");
     exigir(std::fabs(TabelaVantagensTipo::multiplicador({"PLANTA"}, {"AGUA", "PEDRA"}) - 2.25F) < 0.001F,
            "Tipos duplos devem combinar multiplicadores");
+    exigir(std::fabs(TabelaVantagensTipo::multiplicador({"GRAMA"}, {"AGUA", "PEDRA"}) - 2.25F) < 0.001F,
+           "GRAMA deve ser aceito como sinonimo de PLANTA");
     exigir(std::fabs(TabelaVantagensTipo::multiplicador(TipoPokemon::DRAGAO, TipoPokemon::DRAGAO) - 1.5F) < 0.001F,
            "A vantagem de Dragao contra Dragao deve prevalecer");
 
@@ -61,14 +63,46 @@ void testarPokemonETreinador() {
     pokemon.sofrerDano(90, 10);
     exigir(!pokemon.podeBatalhar(), "Pokemon inconsciente ainda pode batalhar");
 
+    Pokemon selvagem(especie("Selvagem"), 1, 1);
+    selvagem.definirAtributosDeEncontro(30, 20, 70, 50);
+    exigir(selvagem.ataque() == 30 && selvagem.defesa() == 20 && selvagem.hp() == 70 &&
+               selvagem.xp() == 50,
+           "Atributos do encontro selvagem nao foram aplicados");
+
+    Treinador curandeiro("Curandeiro", 0);
+    curandeiro.receberPokemon(Pokemon(especie("Ferido"), 10, 10, 50));
+    curandeiro.adicionarErva();
+    int pokemons_curados = 0;
+    exigir(curandeiro.usarErva(&pokemons_curados) && pokemons_curados == 1 &&
+               curandeiro.pokemonAtivos().front().hp() == 60,
+           "Erva deve recuperar 10 HP de pokemon consciente");
+
+    Treinador capturador("Capturador", 0);
+    capturador.receberPokemon(Pokemon(especie("Escolhido"), 10, 10));
+    Pokemon selvagem_inconsciente(especie("Inconsciente"), 10, 10);
+    selvagem_inconsciente.tornarInconsciente(10);
+    std::mt19937 gerador_captura(3);
+    Batalha batalha_captura(gerador_captura);
+    exigir(batalha_captura.capturar(capturador, capturador.pokemonAtivos().front(),
+                                    selvagem_inconsciente) &&
+               capturador.quantidadeAtivos() == 2,
+           "Pokemon selvagem inconsciente deve ser capturado sem iniciar outro duelo");
+
     Treinador treinador("Red", 0);
     treinador.receberPokemon(Pokemon(especie("P"), 10, 10));
     exigir(treinador.pokebolasEquipe() == 6 && treinador.pokebolasCaptura() == 1,
            "Inventario inicial de pokebolas incorreto");
     treinador.coletarOvo(OvoPokemon(especie("Ovo"), 10, 10));
+    exigir(treinador.distanciaOvoRestante() && *treinador.distanciaOvoRestante() == 100,
+           "O ovo deve iniciar com 100 unidades de incubacao restantes");
     Grafo mapa("data/entrada.txt");
+    treinador.moverParaVizinho(mapa, 1);
+    exigir(treinador.distanciaOvoRestante() && *treinador.distanciaOvoRestante() == 95,
+           "A incubacao deve acompanhar a distancia percorrida");
+    treinador.moverParaVizinho(mapa, 0);
     for (int i = 0; i < 20; ++i) treinador.moverParaVizinho(mapa, i % 2 == 0 ? 1 : 0);
     exigir(treinador.quantidadeAtivos() == 2 && !treinador.possuiOvo(), "Ovo nao chocou apos 100 unidades");
+    exigir(!treinador.distanciaOvoRestante(), "O status do ovo deve sumir apos o nascimento");
 
     Treinador limite("Limite", 0);
     for (int i = 0; i < 7; ++i) limite.receberPokemon(Pokemon(especie("P"), 10 + i, 10));
@@ -105,6 +139,7 @@ void testarBatalhaEJornada() {
 void testarCenario() {
     const ConfiguracaoRegiao configuracao = ConfiguracaoRegiao::ler("data/cenario.txt");
     Regiao regiao(configuracao, 7);
+    exigir(configuracao.especies.size() == 14, "Catalogo de especies incompleto");
     exigir(regiao.selvagens().size() == 12 && regiao.treinadores().size() == 4 &&
                regiao.ervas().size() == 6 && regiao.ovos().size() == 2,
            "Entidades regionais nao foram geradas");
@@ -126,12 +161,22 @@ void testarJornadaCompletaAteLiga() {
         for (std::size_t passo = 1; passo < rota.vertices.size(); ++passo) {
             jornada.moverJogador(rota.vertices[passo]);
         }
+        const std::vector<std::size_t> lideres_disponiveis = jornada.lideresNoLocalDoJogador();
+        exigir(lideres_disponiveis.size() == 1 && lideres_disponiveis.front() == i,
+               "O lider disponivel deve estar no mesmo local do jogador");
         exigir(jornada.desafiarLider(i), "O jogador deveria vencer o lider fraco");
+        if (i < 7) {
+            exigir(!jornada.prazoInscricaoIniciado() && jornada.tempoDecorrido() == 0,
+                   "O prazo so deve iniciar apos a oitava insignia");
+        }
     }
+    exigir(jornada.prazoInscricaoIniciado() && jornada.tempoDecorrido() == 0,
+           "O prazo deve iniciar no momento em que a oitava insignia e conquistada");
     const Caminho rota_liga = jornada.mapa().caminhoMinimo(jornada.jogador().posicao(), 10);
     for (std::size_t passo = 1; passo < rota_liga.vertices.size(); ++passo) {
         jornada.moverJogador(rota_liga.vertices[passo]);
     }
+    exigir(jornada.tempoDecorrido() > 0, "O prazo deve contar deslocamentos apos a oitava insignia");
     exigir(jornada.jogador().quantidadeInsignias() == 8 && jornada.podeInscreverNaLiga(),
            "Fluxo completo ate a Liga falhou");
 }

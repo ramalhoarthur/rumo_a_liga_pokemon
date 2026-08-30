@@ -63,14 +63,14 @@ private:
 public:
     explicit Batalha(std::mt19937& gerador) : gerador_(gerador) {}
 
-    // O desafiado sempre ataca primeiro, conforme o enunciado.
+    // Em duelos entre treinadores, o desafiado ataca primeiro, conforme o enunciado.
     ResultadoDuelo duelo(Pokemon& desafiado, int xp_desafiado, Pokemon& desafiante,
-                         int xp_desafiante) {
+                         int xp_desafiante, bool desafiante_ataca_primeiro = false) {
         if (!desafiado.podeBatalhar() || !desafiante.podeBatalhar()) {
             throw std::logic_error("Somente pokemons conscientes podem iniciar um duelo");
         }
 
-        bool vez_do_desafiado = true;
+        bool vez_do_desafiado = !desafiante_ataca_primeiro;
         int turnos = 0;
         int dano_total = 0;
         constexpr int LIMITE_TURNOS = 10000;
@@ -164,7 +164,15 @@ public:
         if (!treinador.podeCapturar()) {
             throw std::logic_error("O treinador nao possui pokebola de captura disponivel");
         }
-        const ResultadoDuelo resultado = duelo(selvagem, 0, escolhido, treinador.xp());
+        // Um selvagem que ja esta inconsciente deve ser capturado sem iniciar outro duelo.
+        if (!selvagem.podeBatalhar()) {
+            treinador.ganharXpPorVitoria(0);
+            escolhido.ganharXp(3);
+            treinador.receberPokemon(std::move(selvagem));
+            return true;
+        }
+        // Um selvagem nao possui treinador: quem o desafia tem a iniciativa na captura.
+        const ResultadoDuelo resultado = duelo(selvagem, 0, escolhido, treinador.xp(), true);
         if (resultado.vencedor != VencedorDuelo::Desafiante) return false;
 
         treinador.ganharXpPorVitoria(0);

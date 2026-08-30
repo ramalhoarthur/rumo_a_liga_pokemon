@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <iostream>
+#include <limits>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -36,18 +38,217 @@ bool batalhasPermitidas(const Jornada& jornada) {
     return !local.temCmp() && !local.temLaboratorio();
 }
 
+bool localTemPMC(const Jornada& jornada) {
+    return jornada.mapa().vertice(jornada.jogador().posicao()).temCmp();
+}
+
+int sortearStatusNoIntervalo(int referencia, int minimo, int maximo, std::mt19937& gerador) {
+    const int limite_inferior = std::max(minimo, static_cast<int>(std::ceil(referencia * 0.8)));
+    const int limite_superior = std::min(maximo, static_cast<int>(std::floor(referencia * 1.5)));
+    return std::uniform_int_distribution<int>(limite_inferior,
+                                              std::max(limite_inferior, limite_superior))(gerador);
+}
+
+// O selvagem e sorteado uma vez dentro dos limites do pokemon ativo com maior XP.
+void balancearPokemonSelvagem(PokemonSelvagem& selvagem, const Treinador& jogador,
+                              std::mt19937& gerador) {
+    if (selvagem.atributos_balanceados || jogador.pokemonAtivos().empty()) return;
+
+    const auto& equipe = jogador.pokemonAtivos();
+    const auto mais_forte = std::max_element(equipe.begin(), equipe.end(),
+                                              [](const Pokemon& esquerdo, const Pokemon& direito) {
+                                                  return esquerdo.xp() < direito.xp();
+                                              });
+    const Pokemon& referencia = *mais_forte;
+    const int xp = sortearStatusNoIntervalo(referencia.xp(), 0, std::numeric_limits<int>::max(), gerador);
+    selvagem.pokemon.definirAtributosDeEncontro(
+        sortearStatusNoIntervalo(referencia.ataque(), xp / 10 + 1,
+                                  std::numeric_limits<int>::max(), gerador),
+        sortearStatusNoIntervalo(referencia.defesa(), xp / 10 + 1,
+                                  std::numeric_limits<int>::max(), gerador),
+        sortearStatusNoIntervalo(referencia.hp(), 1, 100, gerador),
+        xp);
+    selvagem.atributos_balanceados = true;
+}
+
+// Aceita somente as duas formas permitidas de escolher a equipe inicial.
+bool selecionarEquipeInicial(int& escolha) {
+    for (;;) {
+        std::cout << "Escolha a equipe inicial: 1) agua, fogo e grama  2) um pokemon aleatorio: ";
+        if (!(std::cin >> escolha)) {
+            if (std::cin.eof()) return false;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Entrada invalida. Digite 1 ou 2.\n";
+            continue;
+        }
+        if (escolha == 1 || escolha == 2) return true;
+        std::cout << "Opcao invalida. Digite 1 ou 2.\n";
+    }
+}
+
+// Mostra somente deslocamentos permitidos e repete a leitura ate receber um deles.
+// Retorna false apenas quando a entrada e encerrada pelo usuario (EOF).
+bool selecionarDestinoVizinho(const Jornada& jornada, int& destino) {
+    const Grafo& mapa = jornada.mapa();
+    const int origem = jornada.jogador().posicao();
+    const auto& vizinhos = mapa.vizinhos(origem);
+
+    if (vizinhos.empty()) {
+        std::cout << "Nao ha vertices vizinhos para mover a partir deste local.\n";
+        return false;
+    }
+
+    std::cout << "Vertices vizinhos disponiveis:\n";
+    for (const Aresta& aresta : vizinhos) {
+        const Vertice& vertice = mapa.vertice(aresta.destino);
+        std::cout << "  " << aresta.destino << " - " << vertice.descobrirNomeVertice()
+                  << " (distancia " << aresta.peso << ")\n";
+    }
+
+    for (;;) {
+        std::cout << "Digite o ID de um dos vertices listados: ";
+        if (!(std::cin >> destino)) {
+            if (std::cin.eof()) return false;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Entrada invalida. Digite o ID de um dos vertices listados.\n";
+            continue;
+        }
+
+        const bool eh_vizinho = std::any_of(vizinhos.begin(), vizinhos.end(),
+                                             [destino](const Aresta& aresta) {
+                                                 return aresta.destino == destino;
+                                             });
+        if (eh_vizinho) return true;
+        std::cout << "Destino invalido. Digite o ID de um dos vertices listados.\n";
+    }
+}
+
+// Lista todos os vertices do mapa e aceita somente um ID existente.
+bool selecionarVerticeDoMapa(const Grafo& mapa, int& destino) {
+    std::cout << "Vertices disponiveis:\n";
+    for (int id = 0; id < mapa.quantidadeVertices(); ++id) {
+        const Vertice& vertice = mapa.vertice(id);
+        std::cout << "  " << id << " - " << vertice.descobrirNomeVertice() << '\n';
+    }
+
+    for (;;) {
+        std::cout << "Digite o ID do vertice de destino: ";
+        if (!(std::cin >> destino)) {
+            if (std::cin.eof()) return false;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Entrada invalida. Digite o ID de um vertice listado.\n";
+            continue;
+        }
+        if (destino >= 0 && destino < mapa.quantidadeVertices()) return true;
+        std::cout << "Destino invalido. Digite o ID de um vertice listado.\n";
+    }
+}
+
 void mostrarStatus(const Jornada& jornada) {
     const Treinador& jogador = jornada.jogador();
     const Vertice& local = jornada.mapa().vertice(jogador.posicao());
     std::cout << "\nLocal: " << local.descobrirNomeVertice() << " (" << local.descobrirIdVertice()
-              << ")\nTempo: " << jornada.tempoDecorrido() << '/' << jornada.prazoInscricao()
-              << " | Insignias: " << jogador.quantidadeInsignias() << " | Ervas: " << jogador.ervas()
+              << ")\nPrazo da Liga: ";
+    if (jornada.prazoInscricaoIniciado()) {
+        std::cout << jornada.tempoDecorrido() << '/' << jornada.prazoInscricao();
+    } else {
+        std::cout << "---";
+    }
+    std::cout << " | Insignias: " << jogador.quantidadeInsignias() << " | Ervas: " << jogador.ervas()
               << " | Pokebolas: " << jogador.pokebolasEquipe() + jogador.pokebolasCaptura()
               << "\nEquipe:\n";
     for (std::size_t i = 0; i < jogador.pokemonAtivos().size(); ++i) {
         const Pokemon& pokemon = jogador.pokemonAtivos()[i];
         std::cout << "  [" << i << "] " << pokemon.nome() << " - HP " << pokemon.hp() << "/100, XP "
                   << pokemon.xp() << ", AP " << pokemon.ataque() << ", DP " << pokemon.defesa() << '\n';
+    }
+}
+
+bool haSelvagemNoLocal(const Regiao& regiao, const Jornada& jornada) {
+    return std::any_of(regiao.selvagens().begin(), regiao.selvagens().end(), [&](const PokemonSelvagem& selvagem) {
+        return selvagem.posicao == jornada.jogador().posicao();
+    });
+}
+
+bool haTreinadorNoLocal(const Regiao& regiao, const Jornada& jornada) {
+    return std::any_of(regiao.treinadores().begin(), regiao.treinadores().end(), [&](const Treinador& treinador) {
+        return treinador.posicao() == jornada.jogador().posicao();
+    });
+}
+
+void mostrarMenu(const Jornada& jornada, const Regiao& regiao) {
+    std::cout << "\n1-Mover  2-Rota minima  3-Usar erva";
+    if (batalhasPermitidas(jornada)) {
+        if (haSelvagemNoLocal(regiao, jornada)) std::cout << "  4-Capturar";
+        if (haTreinadorNoLocal(regiao, jornada)) std::cout << "  5-Duelo treinador";
+        std::cout << "  6-Ginasio  9-Rocket";
+    }
+    std::cout << "  7-Inscricao";
+    if (localTemPMC(jornada)) std::cout << "  8-PMC";
+    std::cout << "  10-Status ovo  0-Sair\nOpcao: ";
+}
+
+// Exibe somente lideres que estao no vertice atual e valida a escolha.
+bool selecionarLiderNoLocal(const Jornada& jornada, std::size_t& indice) {
+    const std::vector<std::size_t> lideres_disponiveis = jornada.lideresNoLocalDoJogador();
+    if (lideres_disponiveis.empty()) {
+        std::cout << "Nao ha lider de ginasio neste local.\n";
+        return false;
+    }
+
+    std::cout << "Lideres disponiveis neste local:";
+    for (const std::size_t indice_disponivel : lideres_disponiveis) {
+        std::cout << ' ' << indice_disponivel;
+    }
+    std::cout << "\n";
+
+    for (;;) {
+        std::cout << "Indice do lider: ";
+        if (!(std::cin >> indice)) {
+            if (std::cin.eof()) return false;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Entrada invalida. Digite um dos indices listados.\n";
+            continue;
+        }
+        if (std::find(lideres_disponiveis.begin(), lideres_disponiveis.end(), indice) !=
+            lideres_disponiveis.end()) {
+            return true;
+        }
+        std::cout << "Lider invalido. Digite um dos indices listados.\n";
+    }
+}
+
+// Um pokemon inconsciente nao pode iniciar a batalha de captura.
+bool selecionarPokemonConscienteParaCaptura(const Treinador& treinador, std::size_t& indice) {
+    const auto& equipe = treinador.pokemonAtivos();
+    std::vector<std::size_t> disponiveis;
+    for (std::size_t i = 0; i < equipe.size(); ++i) {
+        if (equipe[i].podeBatalhar()) disponiveis.push_back(i);
+    }
+    if (disponiveis.empty()) {
+        std::cout << "Nao ha pokemon consciente disponivel para capturar.\n";
+        return false;
+    }
+
+    std::cout << "Pokemons conscientes disponiveis:";
+    for (const std::size_t indice_disponivel : disponiveis) std::cout << ' ' << indice_disponivel;
+    std::cout << "\n";
+
+    for (;;) {
+        std::cout << "Indice do pokemon que enfrentara o selvagem: ";
+        if (!(std::cin >> indice)) {
+            if (std::cin.eof()) return false;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            std::cout << "Entrada invalida. Digite um dos indices listados.\n";
+            continue;
+        }
+        if (std::find(disponiveis.begin(), disponiveis.end(), indice) != disponiveis.end()) return true;
+        std::cout << "Pokemon invalido ou inconsciente. Digite um dos indices listados.\n";
     }
 }
 
@@ -101,9 +302,8 @@ int main(int argc, char* argv[]) {
         if (nome.empty()) nome = "Treinador";
         Treinador jogador(nome, laboratorio);
 
-        std::cout << "Escolha a equipe inicial: 1) agua, fogo e grama  2) um pokemon aleatorio: ";
-        int escolha = 1;
-        std::cin >> escolha;
+        int escolha;
+        if (!selecionarEquipeInicial(escolha)) return 0;
         if (escolha == 2) {
             const auto& especie = configuracao.especies[
                 std::uniform_int_distribution<std::size_t>(0, configuracao.especies.size() - 1)(gerador)];
@@ -131,16 +331,27 @@ int main(int argc, char* argv[]) {
 
         for (;;) {
             mostrarStatus(jornada);
-            std::cout << "\n1-Mover  2-Rota minima  3-Usar erva  4-Capturar  5-Duelo treinador"
-                         "  6-Ginasio  7-Inscricao  8-PMC  9-Rocket  0-Sair\nOpcao: ";
+            mostrarMenu(jornada, regiao);
             int opcao;
-            if (!(std::cin >> opcao)) break;
+            if (!(std::cin >> opcao)) {
+                if (std::cin.eof()) break;
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                std::cout << "Opcao invalida. Digite uma opcao do menu.\n";
+                continue;
+            }
             if (opcao == 0) break;
+            if (opcao < 0 || opcao > 10) {
+                std::cout << "Opcao invalida. Digite uma opcao do menu.\n";
+                continue;
+            }
 
             if (opcao == 1) {
-                std::cout << "Vertice de destino: ";
                 int destino;
-                std::cin >> destino;
+                if (!selecionarDestinoVizinho(jornada, destino)) {
+                    if (std::cin.eof()) break;
+                    continue;
+                }
                 jornada.moverJogador(destino);
                 auto& ervas = regiao.ervas();
                 const auto primeira_erva = std::remove_if(ervas.begin(), ervas.end(), [&](const ErvaRegional& erva) {
@@ -172,9 +383,11 @@ int main(int argc, char* argv[]) {
                 }
                 regiao.moverEntidadesUmaEtapa(gerador);
             } else if (opcao == 2) {
-                std::cout << "Vertice de destino: ";
                 int destino;
-                std::cin >> destino;
+                if (!selecionarVerticeDoMapa(jornada.mapa(), destino)) {
+                    if (std::cin.eof()) break;
+                    continue;
+                }
                 const Caminho rota = jornada.mapa().caminhoMinimo(jornada.jogador().posicao(), destino);
                 if (!rota.existe()) std::cout << "Destino inalcançavel.\n";
                 else {
@@ -183,33 +396,50 @@ int main(int argc, char* argv[]) {
                     std::cout << '\n';
                 }
             } else if (opcao == 3) {
-                std::cout << (jornada.jogador().usarErva() ? "Erva usada.\n" : "Sem ervas.\n");
-            } else if (opcao == 4) {
-                if (!batalhasPermitidas(jornada)) throw std::logic_error("Batalhas sao proibidas neste local");
-                auto& selvagens = regiao.selvagens();
-                const auto encontrado = std::find_if(selvagens.begin(), selvagens.end(), [&](const auto& selvagem) {
-                    return selvagem.posicao == jornada.jogador().posicao();
-                });
-                if (encontrado == selvagens.end()) {
-                    std::cout << "Nao ha pokemon selvagem neste local.\n";
-                } else if (jornada.jogador().pokemonAtivos().empty()) {
-                    std::cout << "Nao ha pokemon disponivel.\n";
+                int pokemons_curados = 0;
+                if (!jornada.jogador().usarErva(&pokemons_curados)) {
+                    std::cout << "Sem ervas.\n";
+                } else if (pokemons_curados == 0) {
+                    std::cout << "Erva usada, mas nenhum pokemon consciente precisava de cura.\n";
                 } else {
-                    std::cout << "Indice do pokemon que enfrentara o selvagem: ";
+                    std::cout << "Erva usada. " << pokemons_curados << " pokemon(s) recuperaram 10 HP.\n";
+                }
+            } else if (opcao == 4) {
+                if (!batalhasPermitidas(jornada)) {
+                    std::cout << "Batalhas sao proibidas no PMC e no laboratorio.\n";
+                    continue;
+                }
+                auto& selvagens = regiao.selvagens();
+                std::vector<std::size_t> selvagens_no_local;
+                for (std::size_t i = 0; i < selvagens.size(); ++i) {
+                    if (selvagens[i].posicao == jornada.jogador().posicao()) {
+                        selvagens_no_local.push_back(i);
+                    }
+                }
+                if (selvagens_no_local.empty()) {
+                    std::cout << "Nao ha pokemon selvagem neste local.\n";
+                } else {
+                    const std::size_t indice_selvagem = selvagens_no_local[
+                        std::uniform_int_distribution<std::size_t>(0, selvagens_no_local.size() - 1)(gerador)];
+                    PokemonSelvagem& selvagem = selvagens[indice_selvagem];
+                    balancearPokemonSelvagem(selvagem, jornada.jogador(), gerador);
+                    const Pokemon& oponente = selvagem.pokemon;
+                    std::cout << "Pokemon selvagem encontrado: " << oponente.nome() << " - HP "
+                              << oponente.hp() << "/100, XP " << oponente.xp() << ", AP "
+                              << oponente.ataque() << ", DP " << oponente.defesa() << "\n";
                     std::size_t indice_pokemon;
-                    std::cin >> indice_pokemon;
-                    if (indice_pokemon >= jornada.jogador().pokemonAtivos().size()) {
-                        std::cout << "Indice invalido.\n";
+                    if (!selecionarPokemonConscienteParaCaptura(jornada.jogador(), indice_pokemon)) {
+                        if (std::cin.eof()) break;
                         continue;
                     }
                     const bool equipe_cheia = jornada.jogador().quantidadeAtivos() == 6;
                     Batalha batalha(gerador);
                     const bool capturado = batalha.capturar(jornada.jogador(),
                                                             jornada.jogador().pokemonAtivos()[indice_pokemon],
-                                                            encontrado->pokemon);
+                                                            selvagem.pokemon);
                     jornada.jogador().passarTempo(1);
                     if (capturado) {
-                        selvagens.erase(encontrado);
+                        selvagens.erase(selvagens.begin() + static_cast<std::ptrdiff_t>(indice_selvagem));
                         if (equipe_cheia) {
                             std::cout << "Equipe cheia. Qual indice ativo sera enviado ao Professor? ";
                             std::size_t indice_ativo;
@@ -221,7 +451,10 @@ int main(int argc, char* argv[]) {
                     } else std::cout << "O pokemon escapou.\n";
                 }
             } else if (opcao == 5) {
-                if (!batalhasPermitidas(jornada)) throw std::logic_error("Batalhas sao proibidas neste local");
+                if (!batalhasPermitidas(jornada)) {
+                    std::cout << "Batalhas sao proibidas no PMC e no laboratorio.\n";
+                    continue;
+                }
                 auto& treinadores = regiao.treinadores();
                 const auto encontrado = std::find_if(treinadores.begin(), treinadores.end(), [&](const Treinador& t) {
                     return t.posicao() == jornada.jogador().posicao();
@@ -235,19 +468,31 @@ int main(int argc, char* argv[]) {
                     std::cout << (resultado.vencedor == VencedorDuelo::Desafiante ? "Voce venceu.\n" : "Voce perdeu.\n");
                 }
             } else if (opcao == 6) {
-                std::cout << "Indice do lider (0 a " << (quantidade_lideres - 1) << "): ";
+                if (!batalhasPermitidas(jornada)) {
+                    std::cout << "Batalhas sao proibidas no PMC e no laboratorio.\n";
+                    continue;
+                }
                 std::size_t indice;
-                std::cin >> indice;
+                if (!selecionarLiderNoLocal(jornada, indice)) {
+                    if (std::cin.eof()) break;
+                    continue;
+                }
                 if (!selecionarTresPokemon(jornada.jogador())) continue;
                 std::cout << (jornada.desafiarLider(indice) ? "Insignia conquistada.\n" : "Derrota no ginasio.\n");
             } else if (opcao == 7) {
                 std::cout << (jornada.podeInscreverNaLiga() ? "Inscricao realizada. Boa sorte na Liga!\n"
                                                             : "Ainda nao e possivel se inscrever.\n");
             } else if (opcao == 8) {
+                if (!localTemPMC(jornada)) {
+                    std::cout << "O tratamento so pode ser realizado no Centro Medico Pokemon.\n";
+                    continue;
+                }
                 std::cout << "Tratamento concluido apos " << jornada.tratarEquipeNoPMC()
                           << " unidades de tempo.\n";
             } else if (opcao == 9) {
-                if (!jornada.equipeRocketEstaNaPosicaoDoJogador()) {
+                if (!batalhasPermitidas(jornada)) {
+                    std::cout << "Batalhas sao proibidas no PMC e no laboratorio.\n";
+                } else if (!jornada.equipeRocketEstaNaPosicaoDoJogador()) {
                     std::cout << "A Equipe Rocket nao esta neste local.\n";
                 } else if (!selecionarTresPokemon(jornada.jogador())) {
                     continue;
@@ -263,6 +508,14 @@ int main(int argc, char* argv[]) {
                     } else {
                         std::cout << "A Equipe Rocket venceu, mas nao encontrou nada para roubar.\n";
                     }
+                }
+            } else if (opcao == 10) {
+                const std::optional<int> distancia_restante = jornada.jogador().distanciaOvoRestante();
+                if (!distancia_restante) {
+                    std::cout << "Nao ha ovo na incubadora.\n";
+                } else {
+                    std::cout << "Faltam " << *distancia_restante
+                              << " unidades de distancia para o ovo chocar.\n";
                 }
             }
         }

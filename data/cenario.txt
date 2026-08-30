@@ -4,7 +4,18 @@ SELVAGENS 12
 TREINADORES 4
 ERVAS 6
 OVOS 2
-ESPECIES 3
+ESPECIES 14
 3 "Bulbasaur" 1 GRAMA "Ivysaur" 1 GRAMA "Venusaur" 2 GRAMA VENENOSO
 3 "Charmander" 1 FOGO "Charmeleon" 1 FOGO "Charizard" 2 FOGO VOADOR
 3 "Squirtle" 1 AGUA "Wartortle" 1 AGUA "Blastoise" 1 AGUA
+3 "Caterpie" 1 INSETO "Metapod" 1 INSETO "Butterfree" 2 INSETO VOADOR
+3 "Pidgey" 2 NORMAL VOADOR "Pidgeotto" 2 NORMAL VOADOR "Pidgeot" 2 NORMAL VOADOR
+3 "Zubat" 2 VENENOSO VOADOR "Golbat" 2 VENENOSO VOADOR "Crobat" 2 VENENOSO VOADOR
+3 "Geodude" 2 PEDRA TERRA "Graveler" 2 PEDRA TERRA "Golem" 2 PEDRA TERRA
+3 "Abra" 1 PSIQUICO "Kadabra" 1 PSIQUICO "Alakazam" 1 PSIQUICO
+3 "Machop" 1 LUTADOR "Machoke" 1 LUTADOR "Machamp" 1 LUTADOR
+3 "Gastly" 2 FANTASMA VENENOSO "Haunter" 2 FANTASMA VENENOSO "Gengar" 2 FANTASMA VENENOSO
+3 "Dratini" 1 DRAGAO "Dragonair" 1 DRAGAO "Dragonite" 2 DRAGAO VOADOR
+2 "Pikachu" 1 ELETRICO "Raichu" 1 ELETRICO
+1 "Snorlax" 1 NORMAL
+1 "Lapras" 2 AGUA GELO

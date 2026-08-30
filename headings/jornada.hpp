@@ -20,6 +20,7 @@ private:
     Grafo mapa_;
     Treinador jogador_;
     long long prazo_inscricao_;
+    std::optional<long long> inicio_prazo_inscricao_;
     std::vector<LiderGinasio> lideres_;
     std::optional<EquipeRocket> equipe_rocket_;
     std::mt19937 gerador_;
@@ -27,6 +28,12 @@ private:
     bool localPermiteBatalha() const {
         const Vertice& local = mapa_.vertice(jogador_.posicao());
         return !local.temCmp() && !local.temLaboratorio();
+    }
+
+    void iniciarPrazoInscricaoSeNecessario() {
+        if (!inicio_prazo_inscricao_ && jogador_.quantidadeInsignias() >= 8) {
+            inicio_prazo_inscricao_ = jogador_.distanciaPercorrida();
+        }
     }
 
 public:
@@ -46,14 +53,18 @@ public:
             throw std::invalid_argument("Prazo de inscricao deve estar entre 10 e 15 vezes a soma dos pesos");
         }
         (void)mapa_.vertice(jogador_.posicao());
+        iniciarPrazoInscricaoSeNecessario();
     }
 
     const Grafo& mapa() const { return mapa_; }
     const Treinador& jogador() const { return jogador_; }
     Treinador& jogador() { return jogador_; }
     long long prazoInscricao() const { return prazo_inscricao_; }
-    long long tempoDecorrido() const { return jogador_.distanciaPercorrida(); }
-    bool prazoExpirou() const { return tempoDecorrido() > prazo_inscricao_; }
+    bool prazoInscricaoIniciado() const { return inicio_prazo_inscricao_.has_value(); }
+    long long tempoDecorrido() const {
+        return inicio_prazo_inscricao_ ? jogador_.distanciaPercorrida() - *inicio_prazo_inscricao_ : 0;
+    }
+    bool prazoExpirou() const { return prazoInscricaoIniciado() && tempoDecorrido() > prazo_inscricao_; }
 
     void adicionarLider(LiderGinasio lider) {
         const Vertice& local = mapa_.vertice(lider.ginasio());
@@ -61,6 +72,15 @@ public:
             throw std::invalid_argument("O vertice do lider precisa conter um ginasio");
         }
         lideres_.push_back(std::move(lider));
+    }
+
+    // Indices dos lideres que podem ser desafiados no local atual do jogador.
+    std::vector<std::size_t> lideresNoLocalDoJogador() const {
+        std::vector<std::size_t> indices;
+        for (std::size_t i = 0; i < lideres_.size(); ++i) {
+            if (lideres_[i].treinador().posicao() == jogador_.posicao()) indices.push_back(i);
+        }
+        return indices;
     }
 
     void adicionarEquipeRocket(EquipeRocket equipe) {
@@ -77,9 +97,9 @@ public:
     }
 
     void moverJogador(int destino) {
-        const long long antes = tempoDecorrido();
+        const long long antes = jogador_.distanciaPercorrida();
         jogador_.moverParaVizinho(mapa_, destino);
-        const int decorrido = static_cast<int>(tempoDecorrido() - antes);
+        const int decorrido = static_cast<int>(jogador_.distanciaPercorrida() - antes);
         for (LiderGinasio& lider : lideres_) lider.avancarTempo(mapa_, decorrido);
         if (equipe_rocket_) {
             equipe_rocket_->avancarTempo(mapa_, decorrido, gerador_);
@@ -104,6 +124,7 @@ public:
         for (LiderGinasio& outro_lider : lideres_) outro_lider.avancarTempo(mapa_, 1);
         if (resultado.vencedor == VencedorDuelo::Desafiante) {
             jogador_.receberInsignia(lider.insignia());
+            iniciarPrazoInscricaoSeNecessario();
             return true;
         }
         return false;

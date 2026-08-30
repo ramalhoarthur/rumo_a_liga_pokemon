@@ -97,7 +97,10 @@ public:
         static const std::array<std::string, N> nomes = {
             "ACO", "AGUA", "DRAGAO", "ELETRICO", "FADA", "FANTASMA", "FOGO", "GELO", "INSETO",
             "LUTADOR", "NORMAL", "PEDRA", "PLANTA", "PSIQUICO", "SOMBRIO", "TERRA", "VENENOSO", "VOADOR"};
-        const auto encontrado = std::find(nomes.begin(), nomes.end(), tipo);
+        // O arquivo de cenario usa o nome GRAMA; na tabela oficial ele e PLANTA.
+        const std::string& tipo_normalizado =
+            tipo == "GRAMA" ? nomes[static_cast<std::size_t>(TipoPokemon::PLANTA)] : tipo;
+        const auto encontrado = std::find(nomes.begin(), nomes.end(), tipo_normalizado);
         if (encontrado == nomes.end()) throw std::invalid_argument("Tipo pokemon desconhecido: " + tipo);
         return static_cast<TipoPokemon>(std::distance(nomes.begin(), encontrado));
     }
