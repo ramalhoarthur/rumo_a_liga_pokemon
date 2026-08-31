@@ -112,6 +112,6 @@ No menu, o jogador pode mover-se por arestas adjacentes, consultar uma rota mín
 
 ## 🎥 Apresentação
 Links para os vídeos no YouTube/Drive contendo a explicação individual da implementação:
-* 📺 **[Nome do Membro 1]:** [Link do vídeo]
+* 📺 **Andrey Markov Maia Sousa:** https://www.youtube.com/watch?v=NjczNwJlyqE
 * 📺 **[Nome do Membro 2]:** [Link do vídeo]
 * 📺 **[Nome do Membro 3]:** [Link do vídeo]
