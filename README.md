@@ -9,7 +9,7 @@ O projeto **"Rumo à Liga Pokémon"** é um simulador de jornada Pokémon basead
 O sistema simula a modelagem computacional da região, exigindo a aplicação de algoritmos de menor complexidade assintótica possível para navegação, além de implementar as dinâmicas clássicas de evolução, captura e batalhas.
 
 ## 👥 Equipe
-- **Andrey Markov Maia Sousa** - [Descrever brevemente quais operações/algoritmos implementou]
+- **Andrey Markov Maia Sousa** - Arquivo de entrada do mapa, sistema dos pokemons, batalhas, tipos de pokemon e ovos de pokemon.
 - **Arthur de Souza Ramalho** - [Descrever brevemente quais operações/algoritmos implementou]
 - **Luís Felipe Dantas Morais** - [Descrever brevemente quais operações/algoritmos implementou]
 
