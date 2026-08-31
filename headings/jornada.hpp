@@ -116,7 +116,7 @@ public:
         if (lider.treinador().posicao() != jogador_.posicao()) {
             throw std::logic_error("O lider nao esta na mesma posicao do jogador");
         }
-
+    
         Batalha batalha(gerador_);
         const ResultadoBatalhaTreinadores resultado =
             batalha.treinadores(lider.treinador(), jogador_, lider_desiste);

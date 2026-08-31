@@ -10,7 +10,7 @@ O sistema simula a modelagem computacional da região, exigindo a aplicação de
 
 ## 👥 Equipe
 - **Andrey Markov Maia Sousa** - Arquivo de entrada do mapa, sistema dos pokemons, batalhas, tipos de pokemon e ovos de pokemon.
-- **Arthur de Souza Ramalho** - [Descrever brevemente quais operações/algoritmos implementou]
+- **Arthur de Souza Ramalho** - Caminho Mínimo no Grafo(Dijkstra), Menu de Iteração do Jogo, Debugação.
 - **Luís Felipe Dantas Morais** - [Descrever brevemente quais operações/algoritmos implementou]
 
 ---
@@ -113,5 +113,5 @@ No menu, o jogador pode mover-se por arestas adjacentes, consultar uma rota mín
 ## 🎥 Apresentação
 Links para os vídeos no YouTube/Drive contendo a explicação individual da implementação:
 * 📺 **Andrey Markov Maia Sousa:** https://www.youtube.com/watch?v=NjczNwJlyqE
-* 📺 **[Nome do Membro 2]:** [Link do vídeo]
+* 📺 **Arthur De Souza Ramalho:** [\[Link do vídeo\]](https://drive.google.com/file/d/1WvPHG6dOMAjzluC5dHih9ucDsfqEcQZN/view?usp=sharing)
 * 📺 **[Nome do Membro 3]:** [Link do vídeo]

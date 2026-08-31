@@ -143,7 +143,7 @@ public:
         return false;
     }
 
-    // Dijkstra para pesos positivos. Retorna caminho vazio se o destino for inalcançável.
+    // Dijkstra para determinar a menor distância entre um vértice origem e um vértice destino. Retorna um caminho vazio se o destino for inalcançável através da origem.
     Caminho caminhoMinimo(int origem, int destino) const {
         validarId(origem);
         validarId(destino);

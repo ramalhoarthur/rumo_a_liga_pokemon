@@ -49,7 +49,7 @@ int sortearStatusNoIntervalo(int referencia, int minimo, int maximo, std::mt1993
                                               std::max(limite_inferior, limite_superior))(gerador);
 }
 
-// O selvagem e sorteado uma vez dentro dos limites do pokemon ativo com maior XP.
+// Gera um pokémon selvagem aleatório com os status limitados de forma a evitar batalhas muito injustas contra o jogador.
 void balancearPokemonSelvagem(PokemonSelvagem& selvagem, const Treinador& jogador,
                               std::mt19937& gerador) {
     if (selvagem.atributos_balanceados || jogador.pokemonAtivos().empty()) return;
@@ -71,7 +71,7 @@ void balancearPokemonSelvagem(PokemonSelvagem& selvagem, const Treinador& jogado
     selvagem.atributos_balanceados = true;
 }
 
-// Aceita somente as duas formas permitidas de escolher a equipe inicial.
+// No início do jogo, o jogador escolhe entre: Começar com os 3 iniciais ou 1 pokémon aleatório
 bool selecionarEquipeInicial(int& escolha) {
     for (;;) {
         std::cout << "Escolha a equipe inicial: 1) agua, fogo e grama  2) um pokemon aleatorio: ";
@@ -87,8 +87,7 @@ bool selecionarEquipeInicial(int& escolha) {
     }
 }
 
-// Mostra somente deslocamentos permitidos e repete a leitura ate receber um deles.
-// Retorna false apenas quando a entrada e encerrada pelo usuario (EOF).
+// O jogador só pode se mover para um vértice vizinho ao atual. Mostra a lista de vértices vizinhos, para facilitar a escolha do jogador
 bool selecionarDestinoVizinho(const Jornada& jornada, int& destino) {
     const Grafo& mapa = jornada.mapa();
     const int origem = jornada.jogador().posicao();
@@ -125,7 +124,7 @@ bool selecionarDestinoVizinho(const Jornada& jornada, int& destino) {
     }
 }
 
-// Lista todos os vertices do mapa e aceita somente um ID existente.
+// Lista todos os vertices do mapa. Verifica se o vértice existe, se não existir, pede para o jogador escolher um vértice válido.
 bool selecionarVerticeDoMapa(const Grafo& mapa, int& destino) {
     std::cout << "Vertices disponiveis:\n";
     for (int id = 0; id < mapa.quantidadeVertices(); ++id) {
@@ -147,6 +146,7 @@ bool selecionarVerticeDoMapa(const Grafo& mapa, int& destino) {
     }
 }
 
+// Informações da localização, itens do jogador, prazo, time pokémon
 void mostrarStatus(const Jornada& jornada) {
     const Treinador& jogador = jornada.jogador();
     const Vertice& local = jornada.mapa().vertice(jogador.posicao());
@@ -191,7 +191,7 @@ void mostrarMenu(const Jornada& jornada, const Regiao& regiao) {
     std::cout << "  10-Status ovo  0-Sair\nOpcao: ";
 }
 
-// Exibe somente lideres que estao no vertice atual e valida a escolha.
+// Exibe somente lideres que estao no vertice atual e valida a escolha
 bool selecionarLiderNoLocal(const Jornada& jornada, std::size_t& indice) {
     const std::vector<std::size_t> lideres_disponiveis = jornada.lideresNoLocalDoJogador();
     if (lideres_disponiveis.empty()) {
@@ -281,7 +281,7 @@ bool selecionarTresPokemon(Treinador& treinador) {
     return true;
 }
 
-} // namespace
+}
 
 int main(int argc, char* argv[]) {
     try {
