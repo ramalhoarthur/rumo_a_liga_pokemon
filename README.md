@@ -8,11 +8,6 @@ O projeto **"Rumo à Liga Pokémon"** é um simulador de jornada Pokémon basead
 
 O sistema simula a modelagem computacional da região, exigindo a aplicação de algoritmos de menor complexidade assintótica possível para navegação, além de implementar as dinâmicas clássicas de evolução, captura e batalhas.
 
-## 👥 Equipe
-- **Andrey Markov Maia Sousa** - Arquivo de entrada do mapa, sistema dos pokemons, batalhas, tipos de pokemon e ovos de pokemon.
-- **Arthur de Souza Ramalho** - Caminho Mínimo no Grafo(Dijkstra), Menu de Iteração do Jogo, Debugação.
-- **Luís Felipe Dantas Morais** - [Descrever brevemente quais operações/algoritmos implementou]
-
 ---
 
 ## 🗺️ O Mundo (Grafo)
@@ -109,9 +104,3 @@ No menu, o jogador pode mover-se por arestas adjacentes, consultar uma rota mín
 * `src/` - Contém todo o código-fonte desenvolvido.
 * `data/` - Arquivos de texto `.txt` utilizados para carregar a descrição inicial do mapa, quantidades de entidades e posições aleatórias.
 * `README.md` - Documentação principal do repositório.
-
-## 🎥 Apresentação
-Links para os vídeos no YouTube/Drive contendo a explicação individual da implementação:
-* 📺 **Andrey Markov Maia Sousa:** https://www.youtube.com/watch?v=NjczNwJlyqE
-* 📺 **Arthur De Souza Ramalho:** [\[Link do vídeo\]](https://drive.google.com/file/d/1WvPHG6dOMAjzluC5dHih9ucDsfqEcQZN/view?usp=sharing)
-* 📺 **[Nome do Membro 3]:** [Link do vídeo]
