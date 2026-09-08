@@ -104,9 +104,3 @@ No menu, o jogador pode mover-se por arestas adjacentes, consultar uma rota mín
 * `src/` - Contém todo o código-fonte desenvolvido.
 * `data/` - Arquivos de texto `.txt` utilizados para carregar a descrição inicial do mapa, quantidades de entidades e posições aleatórias.
 * `README.md` - Documentação principal do repositório.
-
-## 🎥 Apresentação
-Links para os vídeos no YouTube/Drive contendo a explicação individual da implementação:
-* 📺 **Andrey Markov Maia Sousa:** https://www.youtube.com/watch?v=NjczNwJlyqE
-* 📺 **Arthur De Souza Ramalho:** [\[Link do vídeo\]](https://drive.google.com/file/d/1WvPHG6dOMAjzluC5dHih9ucDsfqEcQZN/view?usp=sharing)
-* 📺 **[Luís Felipe Dantas Morais]:** [https://drive.google.com/file/d/1dtW9b1nLKCMyg-Ww8C-KN4t3FvK7bgV3/view?usp=sharing]
